@@ -1,0 +1,95 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <script slot="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <div style="margin: auto; position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 500px; width: 300px;">
+            <div style="text-align: center; margin-bottom: 30px; font-size: 20px; font-weight: 500;">Blocked Word</div>
+            <div class="input-group">
+                <input type="text" class="form-control">
+            </div>
+            <div class="input-group">
+                <button class="btn btn-primary" style="margin-top: 12px; width: 300px;">Add</button>
+            </div>
+
+            <div style="color:red; font-size: 14px; text-align: center; margin-top: 12px;" id="error"></div>
+
+            <div style="font-size: 16px; text-align: center; margin-top: 30px;">Words List</div>
+            <div id="wordslist" style="margin-top: 12px;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: center; text-align: center;">
+            <div style="color: rgb(134, 134, 134); font-size: 14px; position: absolute; bottom: 8; left: 4; right: 4;">
+                You willingly accept the risks involved. We do not take responsibility for any action taken against you.
+            </div>
+        </div>
+
+        <!-- The core Firebase JS SDK is always required and must be listed first -->
+        <script src="https://www.gstatic.com/firebasejs/7.21.0/firebase-app.js"></script>
+
+        <!-- TODO: Add SDKs for Firebase products that you want to use
+            https://firebase.google.com/docs/web/setup#available-libraries -->
+        <script src="https://www.gstatic.com/firebasejs/7.21.0/firebase-analytics.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/7.21.0/firebase-database.js"></script>
+
+        <script>
+            // Your web app's Firebase configuration
+            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            var firebaseConfig = {
+                apiKey: "AIzaSyBL7fZCYeYpuytmW0F9KRJN5ZooiaOeFWE",
+                authDomain: "unblock-it-531f7.firebaseapp.com",
+                databaseURL: "https://unblock-it-531f7.firebaseio.com",
+                projectId: "unblock-it-531f7",
+                storageBucket: "unblock-it-531f7.appspot.com",
+                messagingSenderId: "750795561951",
+                appId: "1:750795561951:web:537ea91e24a2eb42d5c26a",
+                measurementId: "G-2Q9PXQ0CCR"
+            };
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            firebase.analytics();
+        </script>
+
+        <script>
+            document.getElementsByClassName('btn')[0].addEventListener('click', () => {
+                let textField = document.getElementsByTagName('input')[0];
+                let errorField = document.getElementById('error');
+
+                errorField.innerText = "";
+
+                if (textField.value.length != "") {
+                    if (textField.value.length <= 20 && textField.value.length >= 2) {
+                        firebase.database().ref('/words/').orderByValue().equalTo(textField.value).once('value', word => {
+                            if (word.val() == null) {
+                                firebase.database().ref('/words/').push(textField.value.toString().toLowerCase()).then(() => {
+                                    textField.value = "";
+                                }).catch(error => {
+                                    errorField.innerText =  error.message + " Code: " + error.code;
+                                });
+                            } else {
+                                errorField.innerText = `${textField.value} has already been added.`;
+                            }
+                        });
+                    } else {
+                        errorField.innerText = "Please enter a word less than 20 and more than 2 characters.";
+                    }
+                } else {
+                    errorField.innerText = "Please enter a word.";
+                }
+            });
+        </script>
+
+        <script>
+            firebase.database().ref('/words/').on('child_added', words => {
+                let wordsList = document.getElementById('wordslist');
+
+                wordsList.innerHTML = `<div class="alert alert-secondary" style="padding: 6px; font-size: 14px; margin: 0; margin-bottom: 4px; text-align: center;" role="alert" id="${words.key}">${words.val()}</div>` + wordsList.innerHTML;
+            });
+        </script>
+    </body>
+</html>
